@@ -77,24 +77,58 @@ nav button{display:block;width:100%;border:0;background:transparent;color:#fff;t
 <section id="inventoryView" class="view">
   <div class="notice">
     <b>Inventory Management</b><br>
-    Edit the stock quantity directly below. Changes are saved to the cloud.
+    Manage your products, prices, and stock from one place.
   </div>
 
   <div class="panel">
+    <h2 style="margin-top:0">Add New Product</h2>
+
+    <div class="form">
+      <label>
+        Product Name
+        <input id="invNewName" placeholder="Strawberry Matcha">
+      </label>
+
+      <label>
+        Price (PHP)
+        <input id="invNewPrice" type="number" min="0" step=".01" placeholder="190">
+      </label>
+
+      <label>
+        Category
+        <input id="invNewCategory" placeholder="Matcha">
+      </label>
+
+      <label>
+        Starting Stock
+        <input id="invNewStock" type="number" min="0" step="1" value="0">
+      </label>
+    </div>
+
+    <button class="primary" style="margin-top:14px" onclick="addInventoryProduct()">
+      + Add Product
+    </button>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h2 style="margin-top:0">Products & Stock</h2>
+
     <table>
       <thead>
         <tr>
-          <th>Product</th>
-          <th>Stock</th>
-          <th>Status</th>
-          <th>Action</th>
+         <th>Product</th>
+<th>Category</th>
+<th>Price</th>
+<th>Stock</th>
+<th>Status</th>
+<th>Actions</th>
         </tr>
       </thead>
+
       <tbody id="inventoryTable"></tbody>
     </table>
   </div>
 </section>
-
 <section id="settingsView" class="view">
 <div class="panel"><h2>Store Settings</h2><div class="form">
 <label>Store name<input id="storeName" value="Midoré Matcha"></label><label>Currency<input value="PHP / ₱" disabled></label>
@@ -213,7 +247,32 @@ async function updateStock(id){
 function renderInventory(){
   $("inventoryTable").innerHTML = products.map(p => `
     <tr>
-      <td><b>${esc(p.name)}</b></td>
+      <td>
+        <input
+          id="inv-name-${p.id}"
+          value="${esc(p.name)}"
+          style="width:180px;padding:8px;border:1px solid var(--line);border-radius:8px"
+        >
+      </td>
+
+      <td>
+        <input
+          id="inv-category-${p.id}"
+          value="${esc(p.category || "")}"
+          style="width:130px;padding:8px;border:1px solid var(--line);border-radius:8px"
+        >
+      </td>
+
+      <td>
+        <input
+          id="inv-price-${p.id}"
+          type="number"
+          min="0"
+          step=".01"
+          value="${Number(p.price)}"
+          style="width:100px;padding:8px;border:1px solid var(--line);border-radius:8px"
+        >
+      </td>
 
       <td>
         <input
@@ -222,7 +281,7 @@ function renderInventory(){
           min="0"
           step="1"
           value="${Number(p.stock)}"
-          style="width:90px;padding:8px"
+          style="width:90px;padding:8px;border:1px solid var(--line);border-radius:8px"
         >
       </td>
 
@@ -233,12 +292,62 @@ function renderInventory(){
       </td>
 
       <td>
-        <button class="primary" onclick="updateStock('${esc(p.id)}')">
+        <button class="primary" onclick="saveInventoryProduct('${esc(p.id)}')">
           Save
         </button>
       </td>
     </tr>
   `).join("");
+}
+async function saveInventoryProduct(id){
+  const p = products.find(x => String(x.id) === String(id));
+  if(!p) return;
+
+  const name = document.getElementById(`inv-name-${p.id}`).value.trim();
+  const price = Number(document.getElementById(`inv-price-${p.id}`).value);
+  const stock = Number(document.getElementById(`stock-${p.id}`).value);
+
+  if(!name){
+    alert("Please enter a product name.");
+    return;
+  }
+
+  if(!Number.isFinite(price) || price < 0){
+    alert("Please enter a valid price.");
+    return;
+  }
+
+  if(!Number.isFinite(stock) || stock < 0){
+    alert("Please enter a valid stock quantity.");
+    return;
+  }
+
+ const patch = {
+  name: name,
+  category: document.getElementById(`inv-category-${p.id}`).value.trim() || "Matcha",
+  price: price,
+  stock: Math.floor(stock)
+  };
+
+  if(sb){
+    const r = await sb
+      .from("products")
+      .update(patch)
+      .eq("id", p.id);
+
+    if(r.error){
+      alert(r.error.message);
+      return;
+    }
+
+    await loadCloud();
+  }else{
+    Object.assign(p, patch);
+    saveLocal();
+  }
+
+  renderAll();
+  alert(`${name} updated successfully!`);
 }
 function renderSales(){const today=new Date().toLocaleDateString("en-PH"),rows=sales||[];const todays=rows.filter(x=>new Date(x.created_at||x.id).toLocaleDateString("en-PH")===today),sum=todays.reduce((s,x)=>s+Number(x.total),0);$("todaySales").textContent=peso(sum);$("todayOrders").textContent=todays.length;$("avgOrder").textContent=peso(todays.length?sum/todays.length:0);$("salesTable").innerHTML=rows.map(x=>`<tr><td>${esc(new Date(x.created_at||x.id).toLocaleString("en-PH"))}</td><td>${esc((x.sale_items||x.items||[]).map(i=>`${i.name} × ${i.qty}`).join(", "))}</td><td>${peso(x.total)}</td><td>${esc(x.cashier_email||"")}</td></tr>`).join("")||'<tr><td colspan="4">No sales yet.</td></tr>'}
 function saveStoreName(){localStorage.setItem("midore_store_name",$("storeName").value.trim()||"Midoré Matcha");alert("Store name saved on this device.")}
