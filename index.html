@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#314f43">
+<title>Midoré Matcha POS</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--ink:#25342d;--green:#314f43;--cream:#fffdf5;--line:#dfe5dc;--muted:#6e776f;--danger:#8b3946;--soft:#eef3ed}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f6f6f1;color:var(--ink)}
+button,input,select{font:inherit}button{cursor:pointer}.app{min-height:100vh;display:grid;grid-template-columns:235px 1fr}
+aside{background:var(--green);color:#fff;padding:22px 15px;display:flex;flex-direction:column;gap:18px}.brand{font-size:22px;font-weight:900;padding:8px 10px}.brand small{display:block;font-size:11px;font-weight:600;opacity:.72;margin-top:3px}
+nav button{display:block;width:100%;border:0;background:transparent;color:#fff;text-align:left;padding:12px;border-radius:10px;margin:4px 0;font-weight:750}nav button.active,nav button:hover{background:rgba(255,255,255,.13)}
+.userbox{margin-top:auto;border-top:1px solid rgba(255,255,255,.18);padding:15px 10px;font-size:12px}.main{min-width:0}.topbar{height:66px;background:white;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:10}.status{font-size:12px;color:var(--muted)}.status b{color:var(--green)}.content{padding:24px;max-width:1400px;margin:auto}.view{display:none}.view.active{display:block}.grid{display:grid;gap:18px}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}.card,.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:18px}.metric{font-size:28px;font-weight:900;margin-top:7px}.muted{color:var(--muted);font-size:13px}.posgrid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}.toolbar input,.toolbar select,.form input,.form select{border:1px solid var(--line);background:white;border-radius:10px;padding:11px 12px;outline:none}.toolbar input{flex:1;min-width:180px}.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}.product{border:1px solid var(--line);border-radius:14px;padding:15px;background:var(--cream);display:flex;flex-direction:column;justify-content:space-between;min-height:145px}.product h3{margin:0 0 6px;font-size:16px}.price{font-size:19px;font-weight:900;margin:12px 0}.add,.primary{border:0;background:var(--green);color:#fff;border-radius:10px;padding:11px 14px;font-weight:850}.secondary{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 13px;font-weight:800}.danger{border:0;background:#f5e0e3;color:var(--danger);border-radius:10px;padding:9px 11px;font-weight:800}.cart{position:sticky;top:85px}.cart-row{padding:12px 0;border-bottom:1px solid var(--line)}.rowtop{display:flex;justify-content:space-between;font-weight:800}.sub{font-size:12px;color:var(--muted);margin-top:3px}.controls{display:flex;gap:7px;align-items:center;margin-top:8px}.qty{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:white;font-weight:900}.remove{margin-left:auto;border:0;background:transparent;color:var(--danger);font-size:12px}.totals{margin-top:15px}.totalrow{display:flex;justify-content:space-between;padding:6px 0}.grand{font-size:20px;font-weight:900;border-top:1px solid var(--line);margin-top:7px;padding-top:12px}.fullbtn{width:100%;margin-top:12px}.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:800}.form .full{grid-column:1/-1}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:11px 8px;vertical-align:top}th{font-size:11px;text-transform:uppercase;color:var(--muted)}.actions{display:flex;gap:6px;flex-wrap:wrap}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e7f0e9;font-size:11px;font-weight:850}.badge.off{background:#eee;color:#777}.notice{padding:13px 15px;border-radius:12px;background:#eef3ed;margin-bottom:16px;font-size:13px}.empty{padding:30px;text-align:center;color:var(--muted)}.modal{position:fixed;inset:0;background:rgba(20,30,25,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}.modal.show{display:flex}.modal-card{background:var(--cream);border-radius:18px;padding:22px;width:min(620px,100%);max-height:90vh;overflow:auto}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}.login-card{width:min(430px,100%);background:white;border:1px solid var(--line);border-radius:20px;padding:26px}.login-card h1{margin-top:0}.error{color:var(--danger);font-size:13px;margin:10px 0}.hidden{display:none!important}
+@media(max-width:900px){.app{grid-template-columns:1fr}.app aside{position:sticky;top:0;z-index:20;padding:10px;flex-direction:row;align-items:center;overflow:auto}.brand{white-space:nowrap}nav{display:flex;gap:4px}nav button{white-space:nowrap}.userbox{display:none}.posgrid{grid-template-columns:1fr}.cart{position:static}.cards{grid-template-columns:1fr}.content{padding:14px}.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="loginScreen" class="login">
+  <div class="login-card">
+    <h1>🍵 Midoré Matcha</h1><p class="muted">Cloud POS</p>
+    <div class="notice">Use your staff account to access the POS. The first setup is described in <b>SETUP.md</b>.</div>
+    <div class="form">
+      <label class="full">Email<input id="loginEmail" type="email" placeholder="you@example.com"></label>
+      <label class="full">Password<input id="loginPassword" type="password" placeholder="Password"></label>
+    </div>
+    <div id="loginError" class="error"></div>
+    <button class="primary fullbtn" onclick="signIn()">Sign in</button>
+  </div>
+</div>
+
+<div id="app" class="app hidden">
+<aside>
+  <div class="brand">Midoré Matcha<small>POS & Management</small></div>
+  <nav>
+    <button class="active" data-view="pos">🧾 New Order</button>
+    <button data-view="sales">📊 Sales</button>
+    <button data-view="menu">🧋 Menu</button>
+    <button data-view="inventory">📦 Inventory</button>
+    <button data-view="settings">⚙️ Settings</button>
+  </nav>
+  <div class="userbox"><div id="userEmail"></div><button class="secondary" style="margin-top:8px;width:100%" onclick="signOut()">Sign out</button></div>
+</aside>
+<main class="main">
+<div class="topbar"><strong id="pageTitle">New Order</strong><div class="status" id="connectionStatus">Cloud: <b>connecting…</b></div></div>
+<div class="content">
+
+<section id="posView" class="view active">
+<div class="posgrid">
+<div>
+  <div class="toolbar"><input id="search" placeholder="Search drinks…" oninput="renderProducts()"><select id="category" onchange="renderProducts()"><option>All</option></select></div>
+  <div id="products" class="products"></div>
+</div>
+<div class="panel cart"><h2 style="margin-top:0">Current Order</h2><div id="cartItems"></div>
+<div class="totals"><div class="totalrow"><span>Subtotal</span><b id="subtotal">₱0.00</b></div><div class="totalrow grand"><span>Total</span><span id="total">₱0.00</span></div></div>
+<label style="display:block;margin-top:14px;font-size:12px;font-weight:800">Cash received<input id="cash" type="number" min="0" step=".01" oninput="updateChange()" style="width:100%;margin-top:6px;border:1px solid var(--line);border-radius:10px;padding:11px"></label>
+<div class="totalrow"><span>Change</span><b id="change">₱0.00</b></div><button class="primary fullbtn" onclick="checkout()">Complete Sale</button><button class="secondary fullbtn" onclick="clearCart()">Clear Order</button>
+</div></div>
+</section>
+
+<section id="salesView" class="view">
+<div class="grid cards"><div class="card"><div class="muted">Today</div><div class="metric" id="todaySales">₱0.00</div></div><div class="card"><div class="muted">Orders Today</div><div class="metric" id="todayOrders">0</div></div><div class="card"><div class="muted">Average Order</div><div class="metric" id="avgOrder">₱0.00</div></div></div>
+<div class="panel" style="margin-top:18px"><h2>Recent Sales</h2><table><thead><tr><th>Date</th><th>Items</th><th>Total</th><th>Cashier</th></tr></thead><tbody id="salesTable"></tbody></table></div>
+</section>
+
+<section id="menuView" class="view">
+<div class="notice"><b>Edit your menu here.</b> Changes are stored in the shared cloud database, so your other logged-in devices can see them.</div>
+<div class="panel"><h2>Add Product</h2><div class="form">
+<label>Name<input id="newName" placeholder="Strawberry Matcha"></label><label>Price (PHP)<input id="newPrice" type="number" min="0" step=".01"></label>
+<label>Category<input id="newCategory" placeholder="Matcha"></label><label class="full">Description<input id="newDesc" placeholder="Ingredients / notes"></label>
+</div><button class="primary" style="margin-top:14px" onclick="addProduct()">Add Product</button></div>
+<div class="panel" style="margin-top:18px"><h2>Menu</h2><table><thead><tr><th>Product</th><th>Category</th><th>Description</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody id="menuTable"></tbody></table></div>
+</section>
+
+<section id="inventoryView" class="view">
+<div class="notice"><b>Simple stock control.</b> Set a stock count for each menu item. When stock reaches 0, the item becomes unavailable to the cashier.</div>
+<div class="panel"><table><thead><tr><th>Product</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody id="inventoryTable"></tbody></table></div>
+</section>
+
+<section id="settingsView" class="view">
+<div class="panel"><h2>Store Settings</h2><div class="form">
+<label>Store name<input id="storeName" value="Midoré Matcha"></label><label>Currency<input value="PHP / ₱" disabled></label>
+</div><button class="primary" style="margin-top:14px" onclick="saveStoreName()">Save Store Name</button>
+<h2 style="margin-top:28px">Cloud status</h2><p class="muted">This app is designed for Supabase cloud sync. Keep your project URL and anon key in <b>config.js</b>. Never put a service-role key in the browser.</p></div>
+</section>
+
+</div></main></div>
+
+<div id="editModal" class="modal" onclick="if(event.target===this)closeEdit()"><div class="modal-card">
+<h2>Edit Product</h2><input id="editId" type="hidden"><div class="form">
+<label>Name<input id="editName"></label><label>Price (PHP)<input id="editPrice" type="number" min="0" step=".01"></label>
+<label>Category<input id="editCategory"></label><label class="full">Description<input id="editDesc"></label>
+</div><div class="modal-actions"><button class="secondary" onclick="closeEdit()">Cancel</button><button class="primary" onclick="saveEdit()">Save Changes</button></div>
+</div></div>
+
+<script src="config.js"></script>
+<script>
+const fallbackProducts=[
+{id:"local-1",name:"Matcha Latte",price:190,desc:"Matcha, Oatmilk",category:"Matcha",active:true,stock:999},
+{id:"local-2",name:"Cold Whisk Matcha",price:200,desc:"Matcha, Oatmilk (NO WATER)",category:"Matcha",active:true,stock:999},
+{id:"local-3",name:"Cereal Milk Matcha",price:220,desc:"Matcha, Corn Milk, Corn Flakes",category:"Matcha",active:true,stock:999},
+{id:"local-4",name:"Banana Pudding Matcha",price:220,desc:"Matcha, Oatmilk, Banana Pudding",category:"Matcha",active:true,stock:999}
+];
+let sb=null, products=[], cart=[], sales=[];
+
+const $=id=>document.getElementById(id);
+const peso=n=>"₱"+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+
+async function init(){
+  if(window.MIDORE_SUPABASE_URL && window.MIDORE_SUPABASE_ANON_KEY && !window.MIDORE_SUPABASE_URL.includes("YOUR_")){
+    sb=window.supabase.createClient(window.MIDORE_SUPABASE_URL,window.MIDORE_SUPABASE_ANON_KEY);
+    const {data:{session}}=await sb.auth.getSession();
+    if(session) enterApp(session.user); else showLogin();
+    sb.auth.onAuthStateChange((_e,s)=>s?enterApp(s.user):showLogin());
+  }else{
+    $("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");
+    $("userEmail").textContent="Local demo mode";
+    $("connectionStatus").innerHTML='Cloud: <b>not configured</b>';
+    products=JSON.parse(localStorage.getItem("midore_products_v2")||"null")||fallbackProducts;
+    sales=JSON.parse(localStorage.getItem("midore_sales_v2")||"[]");
+    renderAll();
+  }
+}
+function showLogin(){$("loginScreen").classList.remove("hidden");$("app").classList.add("hidden")}
+async function enterApp(user){$("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=user.email||"";$("connectionStatus").innerHTML='Cloud: <b>connected</b>';await loadCloud();renderAll()}
+async function signIn(){if(!sb){alert("Cloud is not configured yet. Follow SETUP.md.");return}const email=$("loginEmail").value.trim(),password=$("loginPassword").value;const {error}=await sb.auth.signInWithPassword({email,password});$("loginError").textContent=error?error.message:""}
+async function signOut(){if(sb)await sb.auth.signOut();else location.reload()}
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
+function switchView(v){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(v+"View").classList.add("active");document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));$("pageTitle").textContent={pos:"New Order",sales:"Sales",menu:"Menu Management",inventory:"Inventory",settings:"Settings"}[v]||v}
+function saveLocal(){localStorage.setItem("midore_products_v2",JSON.stringify(products));localStorage.setItem("midore_sales_v2",JSON.stringify(sales))}
+async function loadCloud(){
+  const {data,error}=await sb.from("products").select("*").order("name"); if(error){$("connectionStatus").innerHTML='Cloud: <b>database error</b>';return}
+  products=data||[];
+  const r=await sb.from("sales").select("id,created_at,total,cashier_email,sale_items(name,qty,unit_price)").order("created_at",{ascending:false}).limit(100);
+  sales=r.data||[];
+}
+function renderAll(){renderProducts();renderCart();renderMenu();renderInventory();renderSales()}
+function renderCategory(){const cats=[...new Set(products.filter(p=>p.active&&Number(p.stock)>0).map(p=>p.category||"Other"))].sort(),cur=$("category").value;$("category").innerHTML='<option>All</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");if(cats.includes(cur))$("category").value=cur}
+function renderProducts(){renderCategory();const q=$("search").value.toLowerCase(),cat=$("category").value;const list=products.filter(p=>p.active&&Number(p.stock)>0&&(cat==="All"||p.category===cat)&&p.name.toLowerCase().includes(q));$("products").innerHTML=list.map(p=>`<div class="product"><div><h3>${esc(p.name)}</h3><div class="muted">${esc(p.desc||"")}</div><div class="price">${peso(p.price)}</div></div><button class="add" onclick="addToCart('${esc(p.id)}')">Add to order</button></div>`).join("")||'<div class="empty">No available products.</div>'}
+function addToCart(id){const p=products.find(x=>String(x.id)===String(id)&&x.active&&Number(x.stock)>0);if(!p)return;const x=cart.find(i=>String(i.id)===String(id));if(x){if(x.qty<Number(p.stock))x.qty++}else cart.push({...p,qty:1});renderCart()}
+function changeQty(id,d){const x=cart.find(i=>String(i.id)===String(id));if(!x)return;const p=products.find(y=>String(y.id)===String(id));x.qty=Math.max(0,Math.min(Number(p?.stock||x.qty),x.qty+d));if(!x.qty)cart=cart.filter(i=>String(i.id)!==String(id));renderCart()}
+function clearCart(){cart=[];$("cash").value="";renderCart()}
+function renderCart(){const el=$("cartItems");el.innerHTML=cart.length?cart.map(i=>`<div class="cart-row"><div class="rowtop"><span>${esc(i.name)}</span><span>${peso(i.price*i.qty)}</span></div><div class="sub">${peso(i.price)} each</div><div class="controls"><button class="qty" onclick="changeQty('${esc(i.id)}',-1)">−</button><b>${i.qty}</b><button class="qty" onclick="changeQty('${esc(i.id)}',1)">+</button><button class="remove" onclick="changeQty('${esc(i.id)}',-999)">Remove</button></div></div>`).join(""):'<div class="empty">Your order is empty.</div>';const t=cart.reduce((s,i)=>s+i.price*i.qty,0);$("subtotal").textContent=peso(t);$("total").textContent=peso(t);updateChange()}
+function updateChange(){const t=cart.reduce((s,i)=>s+i.price*i.qty,0),c=Number($("cash").value||0);$("change").textContent=peso(Math.max(0,c-t))}
+async function checkout(){const total=cart.reduce((s,i)=>s+i.price*i.qty,0),cash=Number($("cash").value||0);if(!cart.length)return alert("Add an item first.");if(cash<total)return alert("Cash received is less than the total.");if(!sb){const tx={id:Date.now(),created_at:new Date().toISOString(),total,cash,cashier_email:"Local demo",items:cart.map(i=>({name:i.name,qty:i.qty,price:i.price}))};sales.unshift(tx);products.forEach(p=>{const x=cart.find(i=>String(i.id)===String(p.id));if(x&&Number.isFinite(Number(p.stock))&&p.stock<999)p.stock-=x.qty});saveLocal();alert("Sale saved locally.");clearCart();renderAll();return}
+  const {data:{user}}=await sb.auth.getUser();
+  const sale={total,cash,cashier_email:user?.email||"Staff"};const r=await sb.from("sales").insert(sale).select().single();if(r.error)return alert(r.error.message);
+  const items=cart.map(i=>({sale_id:r.data.id,product_id:i.id,name:i.name,qty:i.qty,unit_price:i.price}));const ir=await sb.from("sale_items").insert(items);if(ir.error)return alert(ir.error.message);
+  for(const i of cart){const p=products.find(x=>String(x.id)===String(i.id));if(p)await sb.from("products").update({stock:Math.max(0,Number(p.stock)-i.qty)}).eq("id",p.id)}
+  alert("Sale completed.");clearCart();await loadCloud();renderAll()
+}
+async function addProduct(){const name=$("newName").value.trim(),price=Number($("newPrice").value),category=$("newCategory").value.trim()||"Matcha",desc=$("newDesc").value.trim();if(!name||!Number.isFinite(price)||price<0)return alert("Enter a name and valid price.");const row={name,price,category,desc,active:true,stock:999};if(sb){const r=await sb.from("products").insert(row);if(r.error)return alert(r.error.message);await loadCloud()}else{products.push({id:"local-"+Date.now(),...row});saveLocal()}["newName","newPrice","newCategory","newDesc"].forEach(id=>$(id).value="");renderAll()}
+function openEdit(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;$("editId").value=id;$("editName").value=p.name;$("editPrice").value=p.price;$("editCategory").value=p.category||"Matcha";$("editDesc").value=p.desc||"";$("editModal").classList.add("show")}
+function closeEdit(){$("editModal").classList.remove("show")}
+async function saveEdit(){const id=$("editId").value,p=products.find(x=>String(x.id)===String(id));if(!p)return;const patch={name:$("editName").value.trim(),price:Number($("editPrice").value),category:$("editCategory").value.trim()||"Matcha",desc:$("editDesc").value.trim()};if(!patch.name||!Number.isFinite(patch.price)||patch.price<0)return alert("Enter a valid product.");if(sb){const r=await sb.from("products").update(patch).eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{Object.assign(p,patch);saveLocal()}closeEdit();renderAll()}
+async function toggleProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const patch={active:!p.active};if(sb){const r=await sb.from("products").update(patch).eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{Object.assign(p,patch);saveLocal()}renderAll()}
+async function deleteProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p||!confirm(`Delete "${p.name}"?`))return;if(sb){const r=await sb.from("products").delete().eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{products=products.filter(x=>String(x.id)!==String(id));saveLocal()}renderAll()}
+function renderMenu(){$("menuTable").innerHTML=products.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.category||"")}</td><td>${esc(p.desc||"")}</td><td>${peso(p.price)}</td><td><span class="badge ${p.active?'':'off'}">${p.active?'Available':'Hidden'}</span></td><td><div class="actions"><button class="secondary" onclick="openEdit('${esc(p.id)}')">Edit</button><button class="secondary" onclick="toggleProduct('${esc(p.id)}')">${p.active?'Hide':'Show'}</button><button class="danger" onclick="deleteProduct('${esc(p.id)}')">Delete</button></div></td></tr>`).join("")||'<tr><td colspan="6">No products.</td></tr>'}
+async function updateStock(id){const p=products.find(x=>String(x.id)===String(id));const val=Number(prompt(`Stock for ${p.name}:`,p.stock));if(!Number.isFinite(val)||val<0)return;if(sb){const r=await sb.from("products").update({stock:Math.floor(val)}).eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{p.stock=Math.floor(val);saveLocal()}renderAll()}
+function renderInventory(){$("inventoryTable").innerHTML=products.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${Number(p.stock)}</td><td><span class="badge ${Number(p.stock)>0&&p.active?'':'off'}">${Number(p.stock)>0&&p.active?'Available':'Unavailable'}</span></td><td><button class="secondary" onclick="updateStock('${esc(p.id)}')">Set Stock</button></td></tr>`).join("")}
+function renderSales(){const today=new Date().toLocaleDateString("en-PH"),rows=sales||[];const todays=rows.filter(x=>new Date(x.created_at||x.id).toLocaleDateString("en-PH")===today),sum=todays.reduce((s,x)=>s+Number(x.total),0);$("todaySales").textContent=peso(sum);$("todayOrders").textContent=todays.length;$("avgOrder").textContent=peso(todays.length?sum/todays.length:0);$("salesTable").innerHTML=rows.map(x=>`<tr><td>${esc(new Date(x.created_at||x.id).toLocaleString("en-PH"))}</td><td>${esc((x.sale_items||x.items||[]).map(i=>`${i.name} × ${i.qty}`).join(", "))}</td><td>${peso(x.total)}</td><td>${esc(x.cashier_email||"")}</td></tr>`).join("")||'<tr><td colspan="4">No sales yet.</td></tr>'}
+function saveStoreName(){localStorage.setItem("midore_store_name",$("storeName").value.trim()||"Midoré Matcha");alert("Store name saved on this device.")}
+init();
+</script>
+</body></html>
