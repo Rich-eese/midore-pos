@@ -75,8 +75,24 @@ nav button{display:block;width:100%;border:0;background:transparent;color:#fff;t
 </section>
 
 <section id="inventoryView" class="view">
-<div class="notice"><b>Simple stock control.</b> Set a stock count for each menu item. When stock reaches 0, the item becomes unavailable to the cashier.</div>
-<div class="panel"><table><thead><tr><th>Product</th><th>Stock</th><th>Status</th><th></th></tr></thead><tbody id="inventoryTable"></tbody></table></div>
+  <div class="notice">
+    <b>Inventory Management</b><br>
+    Edit the stock quantity directly below. Changes are saved to the cloud.
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Stock</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTable"></tbody>
+    </table>
+  </div>
 </section>
 
 <section id="settingsView" class="view">
@@ -160,8 +176,70 @@ async function saveEdit(){const id=$("editId").value,p=products.find(x=>String(x
 async function toggleProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;const patch={active:!p.active};if(sb){const r=await sb.from("products").update(patch).eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{Object.assign(p,patch);saveLocal()}renderAll()}
 async function deleteProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p||!confirm(`Delete "${p.name}"?`))return;if(sb){const r=await sb.from("products").delete().eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{products=products.filter(x=>String(x.id)!==String(id));saveLocal()}renderAll()}
 function renderMenu(){$("menuTable").innerHTML=products.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${esc(p.category||"")}</td><td>${esc(p.desc||"")}</td><td>${peso(p.price)}</td><td><span class="badge ${p.active?'':'off'}">${p.active?'Available':'Hidden'}</span></td><td><div class="actions"><button class="secondary" onclick="openEdit('${esc(p.id)}')">Edit</button><button class="secondary" onclick="toggleProduct('${esc(p.id)}')">${p.active?'Hide':'Show'}</button><button class="danger" onclick="deleteProduct('${esc(p.id)}')">Delete</button></div></td></tr>`).join("")||'<tr><td colspan="6">No products.</td></tr>'}
-async function updateStock(id){const p=products.find(x=>String(x.id)===String(id));const val=Number(prompt(`Stock for ${p.name}:`,p.stock));if(!Number.isFinite(val)||val<0)return;if(sb){const r=await sb.from("products").update({stock:Math.floor(val)}).eq("id",p.id);if(r.error)return alert(r.error.message);await loadCloud()}else{p.stock=Math.floor(val);saveLocal()}renderAll()}
-function renderInventory(){$("inventoryTable").innerHTML=products.map(p=>`<tr><td><b>${esc(p.name)}</b></td><td>${Number(p.stock)}</td><td><span class="badge ${Number(p.stock)>0&&p.active?'':'off'}">${Number(p.stock)>0&&p.active?'Available':'Unavailable'}</span></td><td><button class="secondary" onclick="updateStock('${esc(p.id)}')">Set Stock</button></td></tr>`).join("")}
+async function updateStock(id){
+  const p = products.find(x => String(x.id) === String(id));
+  if(!p) return;
+
+  const input = document.getElementById(`stock-${p.id}`);
+  const val = Number(input.value);
+
+  if(!Number.isFinite(val) || val < 0){
+    alert("Please enter a valid stock quantity.");
+    return;
+  }
+
+  const newStock = Math.floor(val);
+
+  if(sb){
+    const r = await sb
+      .from("products")
+      .update({stock: newStock})
+      .eq("id", p.id);
+
+    if(r.error){
+      alert(r.error.message);
+      return;
+    }
+
+    await loadCloud();
+  }else{
+    p.stock = newStock;
+    saveLocal();
+  }
+
+  renderAll();
+  alert(`${p.name} stock updated successfully!`);
+}
+function renderInventory(){
+  $("inventoryTable").innerHTML = products.map(p => `
+    <tr>
+      <td><b>${esc(p.name)}</b></td>
+
+      <td>
+        <input
+          id="stock-${p.id}"
+          type="number"
+          min="0"
+          step="1"
+          value="${Number(p.stock)}"
+          style="width:90px;padding:8px"
+        >
+      </td>
+
+      <td>
+        <span class="badge ${Number(p.stock)>0&&p.active?'':'off'}">
+          ${Number(p.stock)>0&&p.active?'Available':'Unavailable'}
+        </span>
+      </td>
+
+      <td>
+        <button class="primary" onclick="updateStock('${esc(p.id)}')">
+          Save
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
 function renderSales(){const today=new Date().toLocaleDateString("en-PH"),rows=sales||[];const todays=rows.filter(x=>new Date(x.created_at||x.id).toLocaleDateString("en-PH")===today),sum=todays.reduce((s,x)=>s+Number(x.total),0);$("todaySales").textContent=peso(sum);$("todayOrders").textContent=todays.length;$("avgOrder").textContent=peso(todays.length?sum/todays.length:0);$("salesTable").innerHTML=rows.map(x=>`<tr><td>${esc(new Date(x.created_at||x.id).toLocaleString("en-PH"))}</td><td>${esc((x.sale_items||x.items||[]).map(i=>`${i.name} × ${i.qty}`).join(", "))}</td><td>${peso(x.total)}</td><td>${esc(x.cashier_email||"")}</td></tr>`).join("")||'<tr><td colspan="4">No sales yet.</td></tr>'}
 function saveStoreName(){localStorage.setItem("midore_store_name",$("storeName").value.trim()||"Midoré Matcha");alert("Store name saved on this device.")}
 init();
